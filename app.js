@@ -13,7 +13,7 @@ const app = express();
  
 // Middleware configuration
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://your-production-domain.com'],
+  origin: ['http://localhost:3000', `https://${process.env.VERCEL_URL}`],
   methods: ['POST', 'GET'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
