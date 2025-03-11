@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpecBar | AI Product Spec Generator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'VCR';
+            src: url('https://cdnjs.cloudflare.com/ajax/libs/vcr-osd-mono/1.0.1/VCR_OSD_MONO_1.001.ttf') format('truetype');
+        }
+        
+        body {
+            font-family: 'VCR', monospace;
+            background-color: #2b213a;
+            color: #ff8e7c;
+            background-image: 
+                linear-gradient(rgba(255, 142, 124, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 142, 124, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
+        }
+        
+        .terminal-container {
+            border: 4px solid #ff8e7c;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 142, 124, 0.4), inset 0 0 10px rgba(255, 142, 124, 0.2);
+            background-color: #352c48;
+            position: relative;
+            padding: 20px;
+        }
+        
+        .terminal-header {
+            border-bottom: 2px solid #ff8e7c;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .blink {
+            animation: blinker 1s step-end infinite;
+        }
+        
+        .retro-btn {
+            background-color: #352c48;
+            color: #84f9ff;
+            border: 2px solid #84f9ff;
+            font-family: 'VCR', monospace;
+            text-transform: uppercase;
+            padding: 8px 16px;
+            position: relative;
+            box-shadow: 4px 4px 0px 0px #84f9ff;
+            transition: all 0.1s ease;
+        }
+        
+        .retro-btn:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px 0px #84f9ff;
+            background-color: #413858;
+        }
+        
+        .retro-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: none;
+        }
+        
+        .retro-input {
+            background-color: #252136;
+            color: #f9c6ff;
+            border: 2px solid #f9c6ff;
+            font-family: 'VCR', monospace;
+            resize: none;
+        }
+        
+        .retro-input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(249, 198, 255, 0.7);
+        }
+        
+        .terminal-output {
+            background-color: #252136;
+            border: 2px solid #f9c6ff;
+            color: #f9c6ff;
+            font-family: 'VCR', monospace;
+            white-space: pre-wrap;
+            height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .loading-bar {
+            height: 20px;
+            width: 0%;
+            background-color: #84f9ff;
+            transition: width 0.5s ease;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .retro-title {
+            font-size: 48px;
+            text-align: center;
+            color: #f5dd90;
+            text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5), 0 0 10px rgba(245, 221, 144, 0.5);
+            letter-spacing: 2px;
+        }
+        
+        .blinker {
+            animation: blinker 1s step-end infinite;
+        }
+        
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+        
+        .retro-footer {
+            font-size: 12px;
+            color: #ff8e7c;
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0.7;
+        }
+        
+        .shimmer {
+            background: linear-gradient(to right, #352c48 0%, #f5dd90 50%, #352c48 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite linear;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .typing-effect {
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 0.15em solid #f5dd90;
+            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+            color: #f5dd90;
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #f5dd90 }
+        }
+        
+        .quip-bubble {
+            padding: 10px;
+            border: 2px solid #84f9ff;
+            border-radius: 8px;
+            background-color: #252136;
+            margin-top: 10px;
+            position: relative;
+            display: inline-block;
+            color: #84f9ff;
+        }
+        
+        .quip-bubble:after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 30px;
+            border: 8px solid transparent;
+            border-top-color: #84f9ff;
+        }
+        
+        /* Glowing neon text effect */
+        .neon-text {
+            text-shadow: 0 0 5px #84f9ff, 0 0 10px #84f9ff, 0 0 15px #84f9ff;
+            color: #84f9ff;
+        }
+        
+        /* Section labels */
+        .section-label {
+            color: #f5dd90;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        /* Custom scrollbar */
+        .terminal-output::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .terminal-output::-webkit-scrollbar-track {
+            background: #252136;
+        }
+        
+        .terminal-output::-webkit-scrollbar-thumb {
+            background: #f9c6ff;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col py-8">
+    <div class="container mx-auto px-4 flex-grow max-w-3xl">
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <h1 class="retro-title">SPEC<span class="blinker">_</span>BAR</h1>
+                <p class="text-center mb-3 typing-effect">ACCESS GRANTED: PRODUCT BLUEPRINT GENERATOR v1.0</p>
+                <p class="text-center">[WARNING: UNAUTHORIZED ACCESS WILL BE PROSECUTED]</p>
+            </div>
+            
+            <p class="mb-4 section-label">ENTER PRODUCT SPECIFICATIONS BELOW:</p>
+            
+            <textarea 
+                id="userInput" 
+                class="w-full h-40 p-4 retro-input mb-4"
+                placeholder=">> DESCRIBE YOUR RADICAL PRODUCT IDEA HERE, DUDE! <<"
+            ></textarea>
+            
+            <div class="flex justify-center space-x-6 mb-6">
+                <button 
+                    id="generateBtn"
+                    onclick="generateSpec()"
+                    class="retro-btn"
+                >
+                    >> GENERATE SPEC <<
+                </button>
+                <button 
+                    id="downloadButton"
+                    onclick="downloadSpec()"
+                    class="retro-btn hidden"
+                >
+                    >> DOWNLOAD.DOC <<
+                </button>
+            </div>
+
+            <div id="loadingContainer" class="hidden">
+                <p class="text-center mb-2 neon-text" id="loadingMessage">COMPUTING...</p>
+                <div class="loading-bar" id="loadingBar"></div>
+                <div id="quipContainer" class="text-center mt-4">
+                    <div class="quip-bubble inline-block">
+                        <span id="quipText">I'm the product spec this company deserves, but not the one it needs right now...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <p class="mb-2 section-label">OUTPUT:</p>
+                <div 
+                    id="output" 
+                    class="terminal-output"
+                >-- WAITING FOR INPUT --</div>
+            </div>
+            
+            <div class="retro-footer">
+                © 1985 SPECBAR SYSTEMS • UNAUTHORIZED DUPLICATION VIOLATES GALACTIC LAW
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000';
+        const loadingMessages = [
+            "BREWING PRODUCT MAGIC...",
+            "DISTILLING PRODUCT WISDOM...",
+            "ENGINEERING BREAKTHROUGH INSIGHTS...",
+            "TRANSFORMING IDEAS INTO STRATEGY...",
+            "UNLEASHING INNER PRODUCT GENIUS...",
+            "HACKING THE MAINFRAME...",
+            "BYPASSING CORPORATE FIREWALLS...",
+            "CALCULATING SYNERGY METRICS...",
+            "REBOOTING INNOVATION MATRIX...",
+            "DEFRAGMENTING IDEA DRIVE..."
+        ];
+        
+        // Collection of quippy one-liners categorized by character style
+        const quips = [
+            // Batman-style
+            "I'm the product spec this company deserves, but not the one it needs right now...",
+            "It's not who you are underneath, it's what your product spec that defines you.",
+            "Why do we fall? So we can learn to pick our products up.",
+            "Some men just want to watch their products burn.",
+            
+            // Frasier Crane-style
+            "I'm listening to your product requirements... and I'm already overwhelmed.",
+            "This spec isn't just good, it's sherry-sipping, opera-listening good.",
+            "I may have a degree from Harvard, but even I can't make sense of this product idea.",
+            "What you're asking for is the product equivalent of a perfect soufflé - difficult but not impossible.",
+            
+            // Jerry Seinfeld-style
+            "What's the deal with product specs? They're not products, and they're not spectacles.",
+            "Have you ever noticed how everyone wants a perfect product but nobody wants to read the spec?",
+            "Your product is like an airport: lots of features coming and going but nobody wants to stay there.",
+            "If your product were a soup, this spec would be the 'No soup for you!' guy.",
+            
+            // George Costanza-style
+            "This spec is doing the opposite of what you'd expect. That's the George Costanza way!",
+            "You know, I always wanted to pretend to be a product manager.",
+            "It's not a lie if YOU believe your product will actually work like this.",
+            "My product philosophy? Every decision I've ever made has been wrong. So I'm doing the opposite!"
+        ];
+
+        // Add typewriter effect function
+        function typeWriter(text, elementId, speed = 50) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '';
+            let i = 0;
+            
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                }
+            }
+            
+            type();
+        }
+
+        // Easter egg - Konami code
+        let konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        let konamiPosition = 0;
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === konamiCode[konamiPosition]) {
+                konamiPosition++;
+                if (konamiPosition === konamiCode.length) {
+                    document.body.style.backgroundColor = '#ff00ff';
+                    document.querySelectorAll('.terminal-container, .retro-btn, .retro-input, .terminal-output').forEach(el => {
+                        el.style.borderColor = '#00ffff';
+                        el.style.color = '#00ffff';
+                        el.style.boxShadow = '0 0 20px rgba(0, 255, 255, 0.7)';
+                    });
+                    document.querySelector('.retro-title').style.color = '#00ffff';
+                    document.querySelector('.retro-title').style.textShadow = '4px 4px 0 rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 255, 255, 0.7)';
+                    alert('RADICAL MODE ACTIVATED!!!');
+                    konamiPosition = 0;
+                }
+            } else {
+                konamiPosition = 0;
+            }
+        });
+        
+        // Function to display random quips during loading
+        function displayRandomQuip() {
+            const quipText = document.getElementById('quipText');
+            const randomQuip = quips[Math.floor(Math.random() * quips.length)];
+            quipText.textContent = randomQuip;
+        }
+
+        async function generateSpec() {
+            const input = document.getElementById('userInput').value;
+            const generateBtn = document.getElementById('generateBtn');
+            const loadingContainer = document.getElementById('loadingContainer');
+            const outputDiv = document.getElementById('output');
+            const downloadButton = document.getElementById('downloadButton');
+            const loadingBar = document.getElementById('loadingBar');
+            const loadingMessage = document.getElementById('loadingMessage');
+
+            if (input.trim().length < 20) {
+                outputDiv.innerHTML = 'ERROR: INSUFFICIENT DATA. PLEASE PROVIDE MORE DETAILED PRODUCT DESCRIPTION!';
+                return;
+            }
+
+            generateBtn.disabled = true;
+            generateBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            loadingContainer.classList.remove('hidden');
+            outputDiv.innerHTML = '';
+            downloadButton.classList.add('hidden');
+            
+            // Set initial progress of loading bar
+            loadingBar.style.width = '5%';
+            
+            // Set up quip cycling
+            displayRandomQuip();
+            const quipInterval = setInterval(displayRandomQuip, 5000);
+            
+            // Fake partial loading progress (but only go up to 90% until actually done)
+            let progress = 5;
+            const loadingInterval = setInterval(() => {
+                progress += Math.random() * 8;
+                if (progress > 90) progress = 90; // Only go up to 90% until request completes
+                loadingBar.style.width = `${progress}%`;
+                
+                // Randomly change loading message
+                if (Math.random() > 0.8) {
+                    const randomMessage = loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
+                    loadingMessage.textContent = randomMessage;
+                }
+            }, 300);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/generate-spec`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input })
+                });
+
+                const result = await response.json();
+                
+                // Complete the loading bar to 100% only when request is done
+                clearInterval(loadingInterval);
+                loadingBar.style.width = '100%';
+                clearInterval(quipInterval);
+
+                setTimeout(() => {
+                    if (result.spec) {
+                        typeWriter(result.spec, 'output', 10);
+                        downloadButton.classList.remove('hidden');
+                    } else {
+                        outputDiv.innerHTML = 'ERROR 404: SPEC GENERATION FAILED. SYSTEM MALFUNCTION!';
+                    }
+                }, 500);
+            } catch (error) {
+                console.error('Spec Generation Error:', error);
+                clearInterval(loadingInterval);
+                clearInterval(quipInterval);
+                outputDiv.innerHTML = `FATAL ERROR: ${error.message}. PLEASE REBOOT SYSTEM!`;
+                loadingBar.style.width = '100%';
+                loadingBar.style.backgroundColor = '#ff6b6b';
+            } finally {
+                setTimeout(() => {
+                    generateBtn.disabled = false;
+                    generateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    loadingContainer.classList.add('hidden');
+                }, 500);
+            }
+        }
+
+        async function downloadSpec() {
+            const spec = document.getElementById('output').innerText;
+            try {
+                // Add download sound effect
+                const beep = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU');
+                beep.play();
+                
+                const response = await fetch(`${API_BASE_URL}/download-spec`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ spec })
+                });
+
+                const blob = await response.blob();
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = `SpecBar_ProductSpec_${new Date().toISOString().split('T')[0]}.docx`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                
+                // Show download confirmation
+                const output = document.getElementById('output');
+                const originalText = output.innerHTML;
+                output.innerHTML = 'DOWNLOAD SUCCESSFUL! FILE SAVED TO YOUR FLOPPY DISK.';
+                setTimeout(() => {
+                    output.innerHTML = originalText;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Download Error:', error);
+                alert('DOWNLOAD FAILURE: DISK SPACE LOW OR CORRUPTED SECTOR');
+            }
+        }
+        
+        // Add cursor blink sound effect
+        function playRandomKeySound() {
+            if (Math.random() > 0.7) {
+                const frequencies = [800, 900, 1000, 1100];
+                const randomFreq = frequencies[Math.floor(Math.random() * frequencies.length)];
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = 'square';
+                oscillator.frequency.value = randomFreq;
+                gainNode.gain.value = 0.03;
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.stop();
+                }, 20);
+            }
+        }
+        
+        // Add typing sound
+        document.getElementById('userInput').addEventListener('keydown', playRandomKeySound);
+        
+        // Add CRT on/off effect
+        window.addEventListener('load', function() {
+            const body = document.body;
+            body.style.opacity = 0;
+            
+            // Flash effect
+            setTimeout(() => {
+                body.style.transition = 'opacity 0.1s';
+                body.style.opacity = 0.5;
+                setTimeout(() => {
+                    body.style.opacity = 0.2;
+                    setTimeout(() => {
+                        body.style.opacity = 1;
+                        body.style.transition = 'opacity 0.3s';
+                    }, 100);
+                }, 100);
+            }, 300);
+        });
+    </script>
+</body>
+</html>

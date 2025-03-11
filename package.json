@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
@@ -16,12 +17,19 @@
     "url": "https://github.com/samsearth/SpecBar/issues"
   },
   "homepage": "https://github.com/samsearth/SpecBar#readme",
-  "description": "",
   "dependencies": {
+    "@azure/core-auth": "^1.9.0",
+    "@azure/identity": "^4.7.0",
+    "@azure/openai": "^2.0.0",
+    "axios": "^1.8.2",
     "body-parser": "^1.20.3",
+    "cheerio": "^1.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "openai": "^4.86.1"
-  }
+    "express-rate-limit": "^7.5.0",
+    "officegen": "^0.6.5",
+    "openai": "^4.87.2"
+  },
+  "description": ""
 }

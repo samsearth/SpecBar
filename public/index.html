@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpecBar | AI Product Spec Generator</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'VCR';
+            src: url('https://cdnjs.cloudflare.com/ajax/libs/vcr-osd-mono/1.0.1/VCR_OSD_MONO_1.001.ttf') format('truetype');
+        }
+        
+        body {
+            font-family: 'VCR', monospace;
+            background-color: #2b213a;
+            color: #ff8e7c;
+            background-image: 
+                linear-gradient(rgba(255, 142, 124, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 142, 124, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
+        }
+        
+        .terminal-container {
+            border: 4px solid #ff8e7c;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(255, 142, 124, 0.4), inset 0 0 10px rgba(255, 142, 124, 0.2);
+            background-color: #352c48;
+            position: relative;
+            padding: 20px;
+        }
+        
+        .terminal-header {
+            border-bottom: 2px solid #ff8e7c;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .blink {
+            animation: blinker 1s step-end infinite;
+        }
+        
+        .retro-btn {
+            background-color: #352c48;
+            color: #84f9ff;
+            border: 2px solid #84f9ff;
+            font-family: 'VCR', monospace;
+            text-transform: uppercase;
+            padding: 8px 16px;
+            position: relative;
+            box-shadow: 4px 4px 0px 0px #84f9ff;
+            transition: all 0.1s ease;
+        }
+        
+        .retro-btn:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px 0px #84f9ff;
+            background-color: #413858;
+        }
+        
+        .retro-btn:active {
+            transform: translate(4px, 4px);
+            box-shadow: none;
+        }
+        
+        .retro-input {
+            background-color: #252136;
+            color: #f9c6ff;
+            border: 2px solid #f9c6ff;
+            font-family: 'VCR', monospace;
+            resize: none;
+        }
+        
+        .retro-input:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(249, 198, 255, 0.7);
+        }
+        
+        .terminal-output {
+            background-color: #252136;
+            border: 2px solid #f9c6ff;
+            color: #f9c6ff;
+            font-family: 'VCR', monospace;
+            white-space: pre-wrap;
+            height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .loading-bar {
+            height: 20px;
+            width: 0%;
+            background-color: #84f9ff;
+            transition: width 0.5s ease;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        
+        .retro-title {
+            font-size: 48px;
+            text-align: center;
+            color: #f5dd90;
+            text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.5), 0 0 10px rgba(245, 221, 144, 0.5);
+            letter-spacing: 2px;
+        }
+        
+        .blinker {
+            animation: blinker 1s step-end infinite;
+        }
+        
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+        
+        .retro-footer {
+            font-size: 12px;
+            color: #ff8e7c;
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0.7;
+        }
+        
+        .shimmer {
+            background: linear-gradient(to right, #352c48 0%, #f5dd90 50%, #352c48 100%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite linear;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .typing-effect {
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 0.15em solid #f5dd90;
+            animation: typing 3.5s steps(40, end), blink-caret 0.75s step-end infinite;
+            color: #f5dd90;
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #f5dd90 }
+        }
+        
+        .quip-bubble {
+            padding: 10px;
+            border: 2px solid #84f9ff;
+            border-radius: 8px;
+            background-color: #252136;
+            margin-top: 10px;
+            position: relative;
+            display: inline-block;
+            color: #84f9ff;
+        }
+        
+        .quip-bubble:after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 30px;
+            border: 8px solid transparent;
+            border-top-color: #84f9ff;
+        }
+        
+        /* Glowing neon text effect */
+        .neon-text {
+            text-shadow: 0 0 5px #84f9ff, 0 0 10px #84f9ff, 0 0 15px #84f9ff;
+            color: #84f9ff;
+        }
+        
+        /* Section labels */
+        .section-label {
+            color: #f5dd90;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+        
+        /* Custom scrollbar */
+        .terminal-output::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .terminal-output::-webkit-scrollbar-track {
+            background: #252136;
+        }
+        
+        .terminal-output::-webkit-scrollbar-thumb {
+            background: #f9c6ff;
+            border-radius: 5px;
+        }
+
+        /* Process visualization styles */
+        .process-visualizer {
+            background-color: #252136;
+            border: 2px solid #f9c6ff;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .process-step {
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .process-step:before {
+            content: '○';
+            position: absolute;
+            left: 0;
+            color: #84f9ff;
+        }
+
+        .process-step.active:before {
+            content: '●';
+            color: #f5dd90;
+            animation: pulse 1s infinite;
+        }
+
+        .process-step.completed:before {
+            content: '✓';
+            color: #90EE90;
+        }
+
+        .process-step.error:before {
+            content: '×';
+            color: #ff6b6b;
+        }
+
+        .process-details {
+            font-size: 0.9em;
+            margin-left: 22px;
+            padding: 3px 0 3px 8px;
+            border-left: 1px dashed #84f9ff;
+            display: none;
+        }
+
+        .process-step.active .process-details {
+            display: block;
+            color: #f9c6ff;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        .process-substep {
+            margin-left: 15px;
+            font-size: 0.85em;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .research-feed {
+            height: 120px;
+            overflow-y: auto;
+            margin-top: 5px;
+            padding: 5px;
+            background-color: #312746;
+            border: 1px solid #ff8e7c;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+
+        .feed-entry {
+            margin-bottom: 3px;
+            padding-left: 10px;
+            position: relative;
+        }
+
+        .feed-entry:before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            color: #84f9ff;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 5px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+
+        .badge-working {
+            background-color: #f5dd90;
+            color: #252136;
+        }
+
+        .badge-done {
+            background-color: #90EE90;
+            color: #252136;
+        }
+
+        .progress-percentage {
+            float: right;
+            font-size: 0.9em;
+            color: #84f9ff;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col py-8">
+    <div class="container mx-auto px-4 flex-grow max-w-3xl">
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <h1 class="retro-title">SPEC<span class="blinker">_</span>BAR</h1>
+                <p class="text-center mb-3 typing-effect">ACCESS GRANTED: PRODUCT BLUEPRINT GENERATOR v1.0</p>
+                <p class="text-center">[WARNING: UNAUTHORIZED ACCESS WILL BE PROSECUTED]</p>
+            </div>
+            
+            <p class="mb-4 section-label">ENTER PRODUCT SPECIFICATIONS BELOW:</p>
+            
+            <textarea 
+                id="userInput" 
+                class="w-full h-40 p-4 retro-input mb-4"
+                placeholder=">> DESCRIBE YOUR RADICAL PRODUCT IDEA HERE, DUDE! <<"
+            ></textarea>
+            
+            <div class="flex justify-center space-x-6 mb-6">
+                <button 
+                    id="generateBtn"
+                    onclick="generateSpec()"
+                    class="retro-btn"
+                >
+                    >> GENERATE SPEC <<
+                </button>
+                <button 
+                    id="downloadButton"
+                    onclick="downloadSpec()"
+                    class="retro-btn hidden"
+                >
+                    >> DOWNLOAD.DOC <<
+                </button>
+            </div>
+
+            <!-- Process Visualizer - Shows detailed background process -->
+            <div id="processVisualizer" class="process-visualizer hidden">
+                <h3 class="text-center mb-3 neon-text">[ SPEC GENERATION IN PROGRESS ]</h3>
+                
+                <div class="process-step" id="step-problem">
+                    <span class="step-title">PROBLEM STATEMENT & MARKET CONTEXT</span>
+                    <span class="progress-percentage" id="progress-problem">0%</span>
+                    <div class="process-details">
+                        <div class="process-substep">Analyzing market needs...</div>
+                        <div class="process-substep">Quantifying user pain points...</div>
+                        <div class="process-substep">Formulating problem urgency...</div>
+                    </div>
+                </div>
+                
+                <div class="process-step" id="step-personas">
+                    <span class="step-title">USER PERSONAS DEVELOPMENT</span>
+                    <span class="progress-percentage" id="progress-personas">0%</span>
+                    <div class="process-details">
+                        <div class="process-substep">Identifying key demographics...</div>
+                        <div class="process-substep">Mapping jobs-to-be-done...</div>
+                        <div class="process-substep">Crafting emotional journeys...</div>
+                    </div>
+                </div>
+                
+                <div class="process-step" id="step-competitors">
+                    <span class="step-title">COMPETITIVE LANDSCAPE ANALYSIS</span>
+                    <span class="progress-percentage" id="progress-competitors">0%</span>
+                    <div class="process-details">
+                        <div class="process-substep">Scanning market players...</div>
+                        <div class="process-substep">Analyzing competitor strengths/weaknesses...</div>
+                        <div class="research-feed" id="competitorFeed">
+                            <!-- Competitor research entries will appear here -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="process-step" id="step-requirements">
+                    <span class="step-title">PRODUCT REQUIREMENTS MATRIX</span>
+                    <span class="progress-percentage" id="progress-requirements">0%</span>
+                    <div class="process-details">
+                        <div class="process-substep">Defining core features...</div>
+                        <div class="process-substep">Prioritizing requirements (P0-P3)...</div>
+                        <div class="process-substep">Calculating effort vs. impact metrics...</div>
+                    </div>
+                </div>
+                
+                <div class="process-step" id="step-metrics">
+                    <span class="step-title">METRICS & SUCCESS INDICATORS</span>
+                    <span class="progress-percentage" id="progress-metrics">0%</span>
+                    <div class="process-details">
+                        <div class="process-substep">Establishing measurable OKRs...</div>
+                        <div class="process-substep">Defining leading/lagging indicators...</div>
+                    </div>
+                </div>
+                
+                <div class="process-step" id="step-risks">
+                    <span class="step-title">RISK & MITIGATION STRATEGY</span>
+                    <span class="progress-percentage" id="progress-risks">0%</span>
+                    <div class="process-details">
+                        <div class="process-substep">Identifying potential failure modes...</div>
+                        <div class="process-substep">Developing contingency plans...</div>
+                    </div>
+                </div>
+                
+                <div class="process-step" id="step-gtm">
+                    <span class="step-title">GO-TO-MARKET BLUEPRINT</span>
+                    <span class="progress-percentage" id="progress-gtm">0%</span>
+                    <div class="process-details">
+                        <div class="process-substep">Designing rollout strategy...</div>
+                        <div class="process-substep">Creating adoption playbooks...</div>
+                    </div>
+                </div>
+                
+                <div class="process-step" id="step-technical">
+                    <span class="step-title">TECHNICAL DEEP DIVE</span>
+                    <span class="progress-percentage" id="progress-technical">0%</span>
+                    <div class="process-details">
+                        <div class="process-substep">Architecting system components...</div>
+                        <div class="process-substep">Analyzing scalability requirements...</div>
+                    </div>
+                </div>
+                
+                <div class="process-step" id="step-investment">
+                    <span class="step-title">INVESTMENT & EFFORT ESTIMATION</span>
+                    <span class="progress-percentage" id="progress-investment">0%</span>
+                    <div class="process-details">
+                        <div class="process-substep">Calculating development costs...</div>
+                        <div class="process-substep">Modeling potential ROI scenarios...</div>
+                    </div>
+                </div>
+                
+                <div class="process-step" id="step-comms">
+                    <span class="step-title">COMMUNICATION ARTIFACTS</span>
+                    <span class="progress-percentage" id="progress-comms">0%</span>
+                    <div class="process-details">
+                        <div class="process-substep">Crafting LinkedIn announcement...</div>
+                        <div class="process-substep">Developing blog strategy...</div>
+                        <div class="process-substep">Creating internal communications...</div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <div class="loading-bar" id="overallProgressBar"></div>
+                    <p class="text-center mt-2" id="overallProgressText">OVERALL PROGRESS: 0%</p>
+                </div>
+            </div>
+
+            <!-- Simple loading display (will be replaced by process visualizer) -->
+            <div id="loadingContainer" class="hidden">
+                <p class="text-center mb-2 neon-text" id="loadingMessage">COMPUTING...</p>
+                <div class="loading-bar" id="loadingBar"></div>
+                <div id="quipContainer" class="text-center mt-4">
+                    <div class="quip-bubble inline-block">
+                        <span id="quipText">I'm the product spec this company deserves, but not the one it needs right now...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6">
+                <p class="mb-2 section-label">OUTPUT:</p>
+                <div 
+                    id="output" 
+                    class="terminal-output"
+                >-- WAITING FOR INPUT --</div>
+            </div>
+            
+            <div class="retro-footer">
+                © 1985 SPECBAR SYSTEMS • UNAUTHORIZED DUPLICATION VIOLATES GALACTIC LAW
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3000';
+        const loadingMessages = [
+            "BREWING PRODUCT MAGIC...",
+            "DISTILLING PRODUCT WISDOM...",
+            "ENGINEERING BREAKTHROUGH INSIGHTS...",
+            "TRANSFORMING IDEAS INTO STRATEGY...",
+            "UNLEASHING INNER PRODUCT GENIUS...",
+            "HACKING THE MAINFRAME...",
+            "BYPASSING CORPORATE FIREWALLS...",
+            "CALCULATING SYNERGY METRICS...",
+            "REBOOTING INNOVATION MATRIX...",
+            "DEFRAGMENTING IDEA DRIVE..."
+        ];
+        
+        // Collection of quippy one-liners categorized by character style
+        const quips = [
+            // Batman-style
+            "I'm the product spec this company deserves, but not the one it needs right now...",
+            "It's not who you are underneath, it's what your product spec that defines you.",
+            "Why do we fall? So we can learn to pick our products up.",
+            "Some men just want to watch their products burn.",
+            
+            // Frasier Crane-style
+            "I'm listening to your product requirements... and I'm already overwhelmed.",
+            "This spec isn't just good, it's sherry-sipping, opera-listening good.",
+            "I may have a degree from Harvard, but even I can't make sense of this product idea.",
+            "What you're asking for is the product equivalent of a perfect soufflé - difficult but not impossible.",
+            
+            // Jerry Seinfeld-style
+            "What's the deal with product specs? They're not products, and they're not spectacles.",
+            "Have you ever noticed how everyone wants a perfect product but nobody wants to read the spec?",
+            "Your product is like an airport: lots of features coming and going but nobody wants to stay there.",
+            "If your product were a soup, this spec would be the 'No soup for you!' guy.",
+            
+            // George Costanza-style
+            "This spec is doing the opposite of what you'd expect. That's the George Costanza way!",
+            "You know, I always wanted to pretend to be a product manager.",
+            "It's not a lie if YOU believe your product will actually work like this.",
+            "My product philosophy? Every decision I've ever made has been wrong. So I'm doing the opposite!"
+        ];
+
+        // Competitor research feed content
+        const competitorResearchFeed = [
+            "Scanning market landscape...",
+            "Analyzing competitor positioning strategies...",
+            "Examining pricing models across industry...",
+            "Identifying competitive advantages...",
+            "Evaluating UX differentiation...",
+            "Assessing technical approaches...",
+            "Comparing feature sets...",
+            "Analyzing target demographics overlap...",
+            "Reviewing competitor funding rounds...",
+            "Examining market share distribution...",
+            "Identifying emerging players...",
+            "Evaluating competitor roadmaps...",
+            "Finding white space opportunities...",
+            "Calculating competitive response time..."
+        ];
+
+        // Sections corresponding to the process steps
+        const sections = [
+            "problem", "personas", "competitors", "requirements", 
+            "metrics", "risks", "gtm", "technical", 
+            "investment", "comms"
+        ];
+
+        // Add typewriter effect function
+        function typeWriter(text, elementId, speed = 50) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = '';
+            let i = 0;
+            
+            function type() {
+                if (i < text.length) {
+                    element.innerHTML += text.charAt(i);
+                    i++;
+                    setTimeout(type, speed);
+                }
+            }
+            
+            type();
+        }
+
+        // Function to simulate the background process visualization
+        function simulateBackgroundProcess() {
+            const processVisualizer = document.getElementById('processVisualizer');
+            processVisualizer.classList.remove('hidden');
+            document.getElementById('loadingContainer').classList.add('hidden');
+            
+            // Reset all steps
+            sections.forEach(section => {
+                const step = document.getElementById(`step-${section}`);
+                step.className = 'process-step';
+                document.getElementById(`progress-${section}`).textContent = '0%';
+            });
+            
+            let currentSectionIndex = 0;
+            let overallProgress = 0;
+            updateOverallProgress(0);
+            
+            // Add competitors to research feed initially
+            populateCompetitorFeed(5); // Start with 5 entries
+            
+            // Function to update progress for the current section
+            function updateCurrentSection() {
+                const currentSection = sections[currentSectionIndex];
+                const step = document.getElementById(`step-${currentSection}`);
+                const progressEl = document.getElementById(`progress-${currentSection}`);
+                
+                // If starting a new section
+                if (step.className === 'process-step') {
+                    step.className = 'process-step active';
+                }
+                
+                // Get current progress
+                let progress = parseInt(progressEl.textContent);
+                progress += Math.floor(Math.random() * 15) + 5; // Increase by 5-20%
+                
+                // If section is complete
+                if (progress >= 100) {
+                    progress = 100;
+                    progressEl.textContent = '100%';
+                    step.className = 'process-step completed';
+                    
+                    // Move to next section
+                    currentSectionIndex++;
+                    
+                    // If this was competitors section, add more research items
+                    if (currentSection === 'competitors') {
+                        populateCompetitorFeed(10); // Add more research items
+                    }
+                    
+                    // If there are more sections, start the next one
+                    if (currentSectionIndex < sections.length) {
+                        const nextStep = document.getElementById(`step-${sections[currentSectionIndex]}`);
+                        nextStep.className = 'process-step active';
+                    } else {
+                        // All sections complete
+                        updateOverallProgress(100);
+                        return; // Exit the interval
+                    }
+                } else {
+                    progressEl.textContent = `${progress}%`;
+                    
+                    // If this is the competitor section, add more research items occasionally
+                    if (currentSection === 'competitors' && Math.random() > 0.7) {
+                        addCompetitorFeedEntry();
+                    }
+                }
+                
+                // Calculate overall progress
+                overallProgress = 0;
+                sections.forEach(section => {
+                    overallProgress += parseInt(document.getElementById(`progress-${section}`).textContent);
+                });
+                overallProgress = Math.floor(overallProgress / sections.length);
+                updateOverallProgress(overallProgress);
+                
+                // If not complete, schedule next update
+                if (currentSectionIndex < sections.length) {
+                    const delay = Math.floor(Math.random() * 500) + 300; // 300-800ms
+                    setTimeout(updateCurrentSection, delay);
+                }
+            }
+            
+            // Start the process
+            updateCurrentSection();
+        }
+
+        // Function to update overall progress bar and text
+        function updateOverallProgress(progress) {
+            document.getElementById('overallProgressBar').style.width = `${progress}%`;
+            document.getElementById('overallProgressText').textContent = `OVERALL PROGRESS: ${progress}%`;
+        }
+        
+        // Function to populate competitor research feed
+        function populateCompetitorFeed(count) {
+            const feed = document.getElementById('competitorFeed');
+            feed.innerHTML = ''; // Clear current feed
+            
+            // Add research entries
+            for (let i = 0; i < count; i++) {
+                const randomEntry = competitorResearchFeed[Math.floor(Math.random() * competitorResearchFeed.length)];
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'feed-entry';
+                entryDiv.textContent = randomEntry;
+                
+                if (Math.random() > 0.7) {
+                    const badge = document.createElement('span');
+                    badge.className = 'status-badge badge-done';
+                    badge.textContent = 'DONE';
+                    entryDiv.appendChild(badge);
+                } else {
+                    const badge = document.createElement('span');
+                    badge.className = 'status-badge badge-working';
+                    badge.textContent = 'WORKING';
+                    entryDiv.appendChild(badge);
+                }
+                
+                feed.appendChild(entryDiv);
+            }
+        }
+        
+        // Function to add a single competitor feed entry
+        function addCompetitorFeedEntry() {
+            const feed = document.getElementById('competitorFeed');
+            const randomEntry = competitorResearchFeed[Math.floor(Math.random() * competitorResearchFeed.length)];
+            
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'feed-entry';
+            entryDiv.textContent = randomEntry;
+            
+            if (Math.random() > 0.5) {
+                const badge = document.createElement('span');
+                badge.className = 'status-badge badge-done';
+                badge.textContent = 'DONE';
+                entryDiv.appendChild(badge);
+            } else {
+                const badge = document.createElement('span');
+                badge.className = 'status-badge badge-working';
+                badge.textContent = 'WORKING';
+                entryDiv.appendChild(badge);
+            }
+            
+            feed.appendChild(entryDiv);
+            feed.scrollTop = feed.scrollHeight; // Auto-scroll to bottom
+        }
+
+        // Function to display random quips during loading
+        function displayRandomQuip() {
+            const quipText = document.getElementById('quipText');
+            const randomQuip = quips[Math.floor(Math.random() * quips.length)];
+            quipText.textContent = randomQuip;
+        }
+        
+        async function generateSpec() {
+            const input = document.getElementById('userInput').value;
+            const generateBtn = document.getElementById('generateBtn');
+            const outputDiv = document.getElementById('output');
+            const downloadButton = document.getElementById('downloadButton');
+
+            if (input.trim().length < 20) {
+                outputDiv.innerHTML = 'ERROR: INSUFFICIENT DATA. PLEASE PROVIDE MORE DETAILED PRODUCT DESCRIPTION!';
+                return;
+            }
+
+            generateBtn.disabled = true;
+            generateBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            // Show the process visualizer
+            simulateBackgroundProcess();
+            
+            outputDiv.innerHTML = '';
+            downloadButton.classList.add('hidden');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/generate-spec`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input })
+                });
+
+                const result = await response.json();
+                
+                // Once request is complete, ensure all progress bars are at 100%
+                sections.forEach(section => {
+                    const step = document.getElementById(`step-${section}`);
+                    step.className = 'process-step completed';
+                    document.getElementById(`progress-${section}`).textContent = '100%';
+                });
+                
+                updateOverallProgress(100);
+
+                // Hide process visualizer with a small delay for effect
+                setTimeout(() => {
+                    document.getElementById('processVisualizer').classList.add('hidden');
+                    
+                    if (result.spec) {
+                        typeWriter(result.spec, 'output', 10);
+                        downloadButton.classList.remove('hidden');
+                    } else {
+                        outputDiv.innerHTML = 'ERROR 404: SPEC GENERATION FAILED. SYSTEM MALFUNCTION!';
+                    }
+                }, 1000);
+            } catch (error) {
+                console.error('Spec Generation Error:', error);
+                outputDiv.innerHTML = `FATAL ERROR: ${error.message}. PLEASE REBOOT SYSTEM!`;
+                
+                // Mark all sections as failed
+                sections.forEach(section => {
+                    const progressEl = document.getElementById(`progress-${section}`);
+                    if (progressEl.textContent !== '100%') {
+                        document.getElementById(`step-${section}`).classList.add('error');
+                        progressEl.textContent = 'FAILED';
+                        progressEl.style.color = '#ff6b6b';
+                    }
+                });
+                
+                document.getElementById('overallProgressBar').style.backgroundColor = '#ff6b6b';
+                document.getElementById('overallProgressText').textContent = 'PROCESS TERMINATED';
+            } finally {
+                setTimeout(() => {
+                    generateBtn.disabled = false;
+                    generateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    
+                    // Make sure we always hide the process visualizer after we're done
+                    setTimeout(() => {
+                        document.getElementById('processVisualizer').classList.add('hidden');
+                    }, 2000);
+                }, 500);
+            }
+        }
+
+        // Add custom tooltip explaining the process steps
+        const addTooltip = (elementId, text) => {
+            const element = document.getElementById(elementId);
+            element.addEventListener('mouseenter', () => {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'quip-bubble';
+                tooltip.style.position = 'absolute';
+                tooltip.style.left = `${element.offsetLeft + element.offsetWidth + 10}px`;
+                tooltip.style.top = `${element.offsetTop}px`;
+                tooltip.style.zIndex = '1000';
+                tooltip.textContent = text;
+                document.body.appendChild(tooltip);
+                element.tooltip = tooltip;
+            });
+            
+            element.addEventListener('mouseleave', () => {
+                if (element.tooltip) {
+                    element.tooltip.remove();
+                    element.tooltip = null;
+                }
+            });
+        };
+        
+        // Function to play random key sound
+        function playRandomKeySound() {
+            if (Math.random() > 0.7) {
+                const frequencies = [800, 900, 1000, 1100];
+                const randomFreq = frequencies[Math.floor(Math.random() * frequencies.length)];
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = 'square';
+                oscillator.frequency.value = randomFreq;
+                gainNode.gain.value = 0.03;
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.stop();
+                }, 20);
+            }
+        }
+
+        async function downloadSpec() {
+            const spec = document.getElementById('output').innerText;
+            try {
+                // Show download in progress message
+                const output = document.getElementById('output');
+                const originalText = output.innerHTML;
+                output.innerHTML = 'CONVERTING TO DOCX FORMAT... PLEASE WAIT...';
+                
+                // Add download sound effect
+                const beep = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU');
+                beep.play();
+                
+                // Show a mini process visualizer for document generation
+                const miniProcess = document.createElement('div');
+                miniProcess.className = 'process-visualizer mt-4';
+                miniProcess.style.padding = '10px';
+                miniProcess.innerHTML = `
+                    <div class="process-step active">
+                        <span class="step-title">GENERATING DOCUMENT</span>
+                        <div class="process-details">
+                            <div class="process-substep">Formatting sections...</div>
+                            <div class="process-substep">Converting markdown...</div>
+                            <div class="process-substep">Adding metadata...</div>
+                        </div>
+                    </div>
+                    <div class="loading-bar" id="docProgressBar" style="margin-top: 10px;"></div>
+                `;
+                output.appendChild(miniProcess);
+                
+                // Simulate document generation progress
+                let docProgress = 0;
+                const docProgressBar = document.getElementById('docProgressBar');
+                const docInterval = setInterval(() => {
+                    docProgress += 5;
+                    if (docProgress > 95) clearInterval(docInterval);
+                    docProgressBar.style.width = `${docProgress}%`;
+                }, 100);
+                
+                const response = await fetch(`${API_BASE_URL}/download-spec`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ spec })
+                });
+
+                // Clear the interval once we have a response
+                clearInterval(docInterval);
+                docProgressBar.style.width = '100%';
+
+                const blob = await response.blob();
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = `SpecBar_ProductSpec_${new Date().toISOString().split('T')[0]}.docx`;
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                
+                // Show download confirmation
+                output.innerHTML = 'DOWNLOAD SUCCESSFUL! FILE SAVED TO YOUR FLOPPY DISK.';
+                setTimeout(() => {
+                    output.innerHTML = originalText;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Download Error:', error);
+                alert('DOWNLOAD FAILURE: DISK SPACE LOW OR CORRUPTED SECTOR');
+            }
+        }
+        
+        // Add cursor blink sound effect
+        function playRandomKeySound() {
+            if (Math.random() > 0.7) {
+                const frequencies = [800, 900, 1000, 1100];
+                const randomFreq = frequencies[Math.floor(Math.random() * frequencies.length)];
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = 'square';
+                oscillator.frequency.value = randomFreq;
+                gainNode.gain.value = 0.03;
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start();
+                setTimeout(() => {
+                    oscillator.stop();
+                }, 20);
+            }
+        }
+        
+        // Add typing sound
+        document.getElementById('userInput').addEventListener('keydown', playRandomKeySound);
+        
+        // Add CRT on/off effect
+        window.addEventListener('load', function() {
+            const body = document.body;
+            body.style.opacity = 0;
+            
+            // Flash effect
+            setTimeout(() => {
+                body.style.transition = 'opacity 0.1s';
+                body.style.opacity = 0.5;
+                setTimeout(() => {
+                    body.style.opacity = 0.2;
+                    setTimeout(() => {
+                        body.style.opacity = 1;
+                        body.style.transition = 'opacity 0.3s';
+                    }, 100);
+                }, 100);
+            }, 300);
+        });
+    </script>
+</body>
+</html>
