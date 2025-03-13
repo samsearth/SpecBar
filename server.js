@@ -13,7 +13,7 @@ const port = process.env.PORT || 3000;
 
 // Enhanced CORS configuration
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://your-production-domain.com'],
+    origin: ['http://localhost:3000', 'https://specbar.vercel.app'],
     methods: ['POST', 'GET'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));

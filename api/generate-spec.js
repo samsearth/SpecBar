@@ -1,45 +1,5 @@
-// app.js
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
 const { AzureOpenAI } = require('openai');
-const axios = require('axios');
-const cheerio = require('cheerio');
-const officegen = require('officegen');
-const rateLimit = require('express-rate-limit');
 require('dotenv').config();
-
-const app = express();
-
-app.get('/api/test', (req, res) => {
-  res.json({ message: 'Test endpoint working' });
-});
-
-// Configure allowed origins for both local and production
-const allowedOrigins = ['http://localhost:3000'];
-if (process.env.VERCEL_URL) {
-  allowedOrigins.push(`https://${process.env.VERCEL_URL}`);
-}
-allowedOrigins.push('https://specbar.vercel.app');
-
-app.use(cors({
-  origin: allowedOrigins,
-  methods: ['POST', 'GET'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-// Rate limiter middleware
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
-  message: 'Too many requests, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(express.static('public'));
-app.use('/generate-spec', apiLimiter);
 
 // Configure Azure OpenAI client
 const apiKeyAzure = process.env.AZURE_API_KEY;
@@ -257,42 +217,8 @@ FINAL INSTRUCTION:
 Produce a spec that doesn't just describe a product, but tells a compelling story of transformation, innovation, and user-centric design.
 `;
 
-// --- ROUTES ---
-
-// Root test endpoint to help debug 404 issues
-app.get('/', (req, res) => {
-  res.status(200).json({ message: 'SpecBar API is running.' });
-});
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
-  });
-});
-
-// Competitor analysis endpoint
-app.post('/analyze-competitors', async (req, res) => {
-  const { productIdea } = req.body;
-  if (!productIdea) {
-    return res.status(400).json({ error: 'Product idea is required.' });
-  }
-  try {
-    const competitorAnalysis = await findCompetitors(productIdea);
-    res.json({
-      competitorAnalysis,
-      message: "Competitor analysis completed successfully"
-    });
-  } catch (error) {
-    console.error("Competitor Analysis Error:", error);
-    res.status(500).json({ error: "Failed to analyze competitors", details: error.message });
-  }
-});
-
 // Generate spec endpoint
-app.post('/generate-spec', async (req, res) => {
+export default async function handler(req, res) {
   const { input } = req.body;
   if (!input || input.trim().length < 10) {
     return res.status(400).json({ error: 'Product description too short. Provide more details.' });
@@ -337,77 +263,4 @@ ${communicationArtifacts}
       timestamp: new Date().toISOString()
     });
   }
-});
-
-// Download spec as DOCX endpoint
-app.post('/download-spec', (req, res) => {
-  const { spec } = req.body;
-  if (!spec) {
-    return res.status(400).json({ error: "No spec data provided." });
-  }
-  try {
-    const docx = officegen('docx');
-
-    // Add title and timestamp
-    const titleParagraph = docx.createP();
-    titleParagraph.addText('Product Specification Document', {
-      font_face: 'Arial',
-      font_size: 16,
-      bold: true
-    });
-    const dateParagraph = docx.createP();
-    dateParagraph.addText(`Generated: ${new Date().toLocaleString()}`, {
-      font_face: 'Arial',
-      font_size: 10,
-      italic: true
-    });
-    const separatorParagraph = docx.createP();
-    separatorParagraph.addText('─'.repeat(50), { font_size: 11 });
-
-    // Process content by line
-    const lines = spec.split('\n');
-    let currentParagraph = docx.createP();
-    for (const line of lines) {
-      if (line.startsWith('#') || line.startsWith('- ')) {
-        currentParagraph = docx.createP();
-        if (line.startsWith('##')) {
-          currentParagraph.addText(line.replace(/^##\s*/, ''), {
-            font_face: 'Arial',
-            font_size: 14,
-            bold: true
-          });
-        } else if (line.startsWith('#')) {
-          currentParagraph.addText(line.replace(/^#\s*/, ''), {
-            font_face: 'Arial',
-            font_size: 16,
-            bold: true
-          });
-        } else {
-          currentParagraph.addText(line, { font_face: 'Arial', font_size: 11 });
-        }
-      } else if (line.trim() === '') {
-        currentParagraph = docx.createP();
-      } else {
-        currentParagraph.addText(line, { font_face: 'Arial', font_size: 11 });
-        currentParagraph = docx.createP();
-      }
-    }
-
-    res.setHeader('Content-Disposition', `attachment; filename=SpecBar_Spec_${Date.now()}.docx`);
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-    docx.generate(res);
-  } catch (error) {
-    console.error("Document Generation Error:", error);
-    res.status(500).json({ error: 'Could not generate document', details: error.message });
-  }
-});
-
-// Catch-all 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: 'The requested resource was not found.'
-  });
-});
-
-module.exports = app;
+};
