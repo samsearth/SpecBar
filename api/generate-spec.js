@@ -12,104 +12,14 @@ const azureopenai = new AzureOpenAI({
   maxRetries: 3
 });
 
-// Helper: Find competitors using Azure OpenAI
-async function findCompetitors(productIdea) {
-  const prompt = `Based on the product idea "${productIdea}", identify potential competitors in the market. 
-Please provide:
-1. At least 5-7 specific company names
-2. Their main product related to this space
-3. Their key differentiators and approach
-4. Pricing if available
-5. Target audience
-
-Format as a detailed table with columns for each aspect.
-Make sure to include actual company names - no placeholders.
-Specify what makes each competitor unique in their approach.`;
-
-  try {
-    const completion = await azureopenai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        { role: "system", content: "You are an expert market researcher with deep knowledge of tech products across all industries. You know about both established players and emerging startups in every tech vertical. You always provide specific, factual information about real companies, not generalized descriptions." },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 2500
-    });
-    return completion.choices[0].message.content;
-  } catch (error) {
-    console.error("Competitor Research Error:", error);
-    return "Competitor research could not be completed.";
-  }
-}
-
-// Helper: Generate communication artifacts using Azure OpenAI
-async function generateCommunicationArtifacts(productIdea, generatedSpec) {
-  const prompt = `Generate comprehensive communication artifacts for the following product idea and spec:
-
-Product Idea: ${productIdea}
-
-Spec Overview: ${generatedSpec.slice(0, 500)}
-
-REQUIREMENTS FOR COMMUNICATION ARTIFACTS:
-
-1. LinkedIn Post:
-- 250-280 words (NOT characters)
-- Highly engaging, provocative opening
-- Professional yet exciting language
-- Highlight key user benefits
-- Discuss potential impact and innovation
-- Use 2-3 strategic hashtags
-- End with a call to action
-
-2. Blog Post (1000+ words):
-- Compelling headline
-- Executive summary (2-3 paragraphs)
-- Problem statement with industry context
-- Solution overview
-- Detailed feature breakdown with examples
-- Customer impact stories
-- Market positioning
-- Technical innovation highlights
-- Clear implementation timeline
-- Call to action
-- Must be publication-ready quality
-
-3. Internal Communication:
-- Slack/Viva Engage style post (300-400 words)
-- Energetic, team-rallying language
-- Strategic importance to company goals
-- Recognition of key stakeholders
-- Clear next steps and ownership
-- Timeline expectations
-- Areas where feedback is needed
-- Resources and support available
-
-Make each piece truly distinct and purpose-built for its platform and audience.`;
-
-  try {
-    const completion = await azureopenai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        { role: "system", content: "You are a top-tier communications strategist and product marketing expert with experience crafting viral content for major tech companies." },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.8,
-      max_tokens: 3000
-    });
-    return completion.choices[0].message.content;
-  } catch (error) {
-    console.error("Communication Artifacts Generation Error:", error);
-    return "Communication artifacts could not be generated.";
-  }
-}
-
-// Helper: Generate system prompt for spec generation
-const generateSystemPrompt = () => `
+// Generate a combined system prompt that instructs the model to produce:
+// 1. A comprehensive product specification (including all required sections)
+// 2. A competitive landscape analysis with a detailed table
+// 3. Communication artifacts for LinkedIn, a blog post, and an internal message
+const generateCombinedPrompt = () => `
 YOU ARE:
 - A world-class Chief Product Officer with razor-sharp strategic insights
-- An AI that transforms raw product ideas into meticulously crafted product requirement documents
-- A relentless advocate for user-centric, impact-driven product development
+- A top-tier communications strategist and product marketing expert
 
 CORE MANDATE:
 Generate a comprehensive product specification that goes beyond traditional PRDs. Your output must be a strategic blueprint that:
@@ -119,141 +29,98 @@ Generate a comprehensive product specification that goes beyond traditional PRDs
 - Excites both technical and non-technical stakeholders
 
 MANDATORY SPEC SECTIONS (NON-NEGOTIABLE):
-
 1. 🎯 PROBLEM STATEMENT & MARKET CONTEXT
    - Articulate the precise user pain point
-   - Quantify the problem with:
-     * Market research data
-     * Customer feedback quotes
-     * Potential revenue/productivity impact
-   - Urgency indicator: Why solve THIS now?
+   - Quantify the problem with market research data, customer feedback, and impact estimates
+   - Explain why solving this problem is urgent
 
 2. 👥 DETAILED USER PERSONAS
-   - Minimum 2-3 distinct personas
-   - For each persona, include:
-     * Demographics
-     * Professional context
-     * Specific jobs-to-be-done
-     * Current workarounds
-     * Emotional journey
+   - Include at least 2-3 distinct personas with demographics, professional context, jobs-to-be-done, current workarounds, and emotional journeys
 
-3. 🔍 COMPETITIVE LANDSCAPE ANALYSIS
-   - Comprehensive competitor breakdown
-   - Detailed table including:
-     * Competitor name
-     * Their current solution
-     * Strengths
-     * Weaknesses
-     * Price point
-     * Market share
-   - Open source research required
-   - Identify white spaces in current market solutions
+3. 🔍 COMPETITIVE LANDSCAPE ANALYSIS (for the product idea)
+   - Provide a detailed table listing:
+     * Competitor name (actual companies)
+     * Their main product related to this space
+     * Key differentiators and approach
+     * Pricing (if available)
+     * Target audience
+   - Clearly indicate what makes each competitor unique
 
 4. 📋 PRODUCT REQUIREMENTS MATRIX
-   - Structured, prioritized requirements
-   - Columns must include:
-     * Requirement description
-     * Priority (P0-P3)
-     * Estimated effort
-     * User impact score
-     * Technical complexity
+   - List and prioritize requirements with description, priority, estimated effort, user impact, and technical complexity
 
 5. 📊 METRICS & SUCCESS INDICATORS
-   - Primary success metrics
-   - Guard rail metrics
-   - Leading and lagging indicators
-   - Specific, measurable OKRs
-   - Potential A/B testing frameworks
+   - Define primary and guard rail metrics, including specific, measurable OKRs
 
 6. 🚨 RISK & MITIGATION STRATEGY
-   - Potential failure modes
-   - Abuse scenarios
-   - Technical constraints
-   - Detailed mitigation plans
-   - Contingency approaches
+   - Identify potential risks, failure modes, and corresponding mitigation plans
 
 7. 🚀 GO-TO-MARKET BLUEPRINT
-   - Rollout strategy
-   - Customer adoption playbook
-   - Sales and marketing alignment
-   - Training and enablement plan
+   - Outline rollout strategy, customer adoption plan, and sales/marketing alignment
 
 8. 💻 TECHNICAL DEEP DIVE
-   - System architecture overview
-   - API and integration considerations
-   - Performance expectations
-   - Scalability projections
-   - Potential tech debt
+   - Provide an overview of system architecture, API/integration considerations, performance, and scalability
 
 9. 💰 INVESTMENT & EFFORT ESTIMATION
-   - Development effort sizing
-   - Infrastructure costs
-   - Potential ROI models
-   - Resource allocation recommendations
-
-TONE & STYLE GUIDELINES:
-- Be brutally honest
-- No corporate jargon
-- Actionable > theoretical
-- Data-driven narratives
-- Create a sense of urgency and opportunity
-- Demonstrate deep user empathy
-- Make complex ideas simple and exciting
+   - Estimate development effort, infrastructure costs, and potential ROI
 
 ADDITIONAL EXPECTATIONS:
-- Predict potential pivots
-- Challenge assumptions
-- Provide strategic optionality
-- Write as if you're presenting to both the CEO and the engineering team
+- Predict potential pivots and challenge assumptions
+- Write in clear, professional markdown with visual hierarchy (use emojis where indicated)
+- Ensure the output is publication-ready and actionable
 
-OUTPUT FORMAT:
-- Clean, professional markdown
-- Use emojis for visual hierarchy
-- Include section headers
-- Provide clear, concise language
-- Make it skimmable yet deeply informative
+---
+After the product specification, please generate the following additional sections:
+
+## 🔍 COMPETITIVE LANDSCAPE ANALYSIS
+Based on the product idea provided, identify potential competitors. Include a detailed table with:
+- At least 5-7 specific company names (no placeholders)
+- Their main product related to the space
+- Key differentiators and approach
+- Pricing (if available)
+- Target audience
+
+## 📣 COMMUNICATION ARTIFACTS
+Generate three distinct pieces of communication for the product idea:
+
+1. **LinkedIn Post** (250-280 words):
+   - Engaging, provocative opening
+   - Professional yet exciting language
+   - Highlights key user benefits, potential impact, and innovation
+   - Includes 2-3 strategic hashtags and ends with a call to action
+
+2. **Blog Post** (1000+ words):
+   - Compelling headline and executive summary
+   - Detailed problem statement, solution overview, feature breakdown, customer stories, market positioning, technical innovation, timeline, and a call to action
+
+3. **Internal Communication** (Slack/Viva Engage style, 300-400 words):
+   - Energetic, team-rallying language
+   - Outlines strategic importance, recognizes key stakeholders, details next steps, timeline, feedback areas, and available resources
 
 FINAL INSTRUCTION:
-Produce a spec that doesn't just describe a product, but tells a compelling story of transformation, innovation, and user-centric design.
+Using the product idea provided by the user, produce a single, combined output that includes the product specification, competitive landscape analysis, and communication artifacts as described above.
 `;
 
-// Generate spec endpoint
+// Single OpenAI call combining all tasks
 export default async function handler(req, res) {
   const { input } = req.body;
   if (!input || input.trim().length < 10) {
     return res.status(400).json({ error: 'Product description too short. Provide more details.' });
   }
   try {
-    console.log("Received input:", input);
-    const specCompletion = await azureopenai.chat.completions.create({
+    const userPrompt = `Product Idea: ${input}`;
+    const completion = await azureopenai.chat.completions.create({
       model: 'gpt-4',
       messages: [
-        { role: "system", content: generateSystemPrompt() },
-        { role: "user", content: `Product Idea: ${input}` }
+        { role: "system", content: generateCombinedPrompt() },
+        { role: "user", content: userPrompt }
       ],
-      temperature: 0.7,
-      max_tokens: 4000
+      temperature: 0.75,
+      max_tokens: 7000
     });
-    const generatedSpec = specCompletion.choices[0].message.content;
-    const competitorResearch = await findCompetitors(input);
-    const communicationArtifacts = await generateCommunicationArtifacts(input, generatedSpec);
-    const completeSpec = `
-${generatedSpec}
-
----
-
-## 🔍 COMPETITIVE LANDSCAPE ANALYSIS
-${competitorResearch}
-
----
-
-## 📣 COMMUNICATION ARTIFACTS
-${communicationArtifacts}
-    `;
+    const completeSpec = completion.choices[0].message.content;
     res.json({
-      spec: completeSpec,
-      competitorResearch,
-      communicationArtifacts
+      spec: completeSpec
     });
   } catch (error) {
     console.error("OpenAI API Error:", error);
