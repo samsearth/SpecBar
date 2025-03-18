@@ -7,8 +7,6 @@ const cheerio = require('cheerio');
 const officegen = require('officegen');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
-// Character limit for product idea input
-const CHARACTER_LIMIT = 245;
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -292,15 +290,7 @@ app.post('/generate-spec', async (req, res) => {
 
     try {
         console.log("Received input:", input);
-
-    // Check if input exceeds character limit
-if (input.length > CHARACTER_LIMIT) {
-    return res.status(400).json({ 
-        error: 'Product description exceeds character limit', 
-        limit: CHARACTER_LIMIT,
-        actual: input.length 
-    });
-}       
+        
         // Generate main spec
         const specCompletion = await azureopenai.chat.completions.create({
             model: 'gpt-4',
@@ -335,7 +325,7 @@ ${competitorResearch}
 ${communicationArtifacts}
         `;
 
-        res.json({  
+        res.json({ 
             spec: completeSpec,
             competitorResearch: competitorResearch,
             communicationArtifacts,
