@@ -3,756 +3,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Idea Wizard | Magic Product Spec Generator</title>
+    <title>AI-GENERATED SPECS!</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;700&display=swap');
+        @font-face {
+            font-family: 'VCR';
+            src: url('https://cdnjs.cloudflare.com/ajax/libs/vcr-osd-mono/1.0.1/VCR_OSD_MONO_1.001.ttf') format('truetype');
+        }
         
         body {
-            font-family: 'Baloo 2', cursive;
-            background-color: #FCF7DE;
-            color: #333;
+            font-family: 'VCR', monospace;
+            background-color: #2b213a;
+            color: #ff8e7c;
             background-image: 
-                radial-gradient(#FFB6C1 2px, transparent 2px),
-                radial-gradient(#AEC6CF 2px, transparent 2px);
-            background-size: 40px 40px;
-            background-position: 0 0, 20px 20px;
+                linear-gradient(rgba(255, 142, 124, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 142, 124, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
         }
         
-        .wizard-container {
-            border: 5px solid #FF9AA2;
-            border-radius: 20px;
-            box-shadow: 0 10px 20px rgba(255, 154, 162, 0.3), inset 0 0 10px rgba(255, 154, 162, 0.2);
-            background-color: white;
+        /* All your existing styles... */
+        
+        /* Character counter styles */
+        .char-counter {
+            margin-top: 5px;
+            text-align: right;
+            font-size: 14px;
+            padding-right: 10px;
+        }
+        
+        .counter-warning {
+            color: #f5dd90;
+        }
+        
+        .counter-error {
+            color: #ff6b6b;
+            animation: pulse 1s infinite;
+        }
+        
+        /* Limit bar */
+        .limit-bar {
+            height: 8px;
+            background-color: #352c48;
+            border-radius: 4px;
+            margin-top: 5px;
             position: relative;
-            padding: 25px;
-            background-image: linear-gradient(135deg, white 85%, #FFDAC1 85%);
-        }
-        
-        .wizard-container::before {
-            content: "";
-            position: absolute;
-            top: -15px;
-            left: 30px;
-            width: 80px;
-            height: 30px;
-            background-color: #B5EAD7;
-            border-radius: 10px 10px 0 0;
-            z-index: -1;
-        }
-        
-        .wizard-container::after {
-            content: "";
-            position: absolute;
-            bottom: -10px;
-            right: 40px;
-            width: 60px;
-            height: 20px;
-            background-color: #C7CEEA;
-            border-radius: 0 0 10px 10px;
-            z-index: -1;
-        }
-        
-        .wizard-header {
-            border-bottom: 3px dashed #C7CEEA;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-            position: relative;
-        }
-        
-        .wizard-title {
-            font-size: 48px;
-            text-align: center;
-            color: #FF9AA2;
-            text-shadow: 3px 3px 0px #FFDAC1;
-            letter-spacing: 2px;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .wizard-title::after {
-            content: "✨";
-            position: absolute;
-            top: -10px;
-            right: 25%;
-            font-size: 30px;
-        }
-        
-        .wizard-title::before {
-            content: "🔮";
-            position: absolute;
-            bottom: 0;
-            left: 25%;
-            font-size: 30px;
-        }
-        
-        .magic-btn {
-            background-color: #B5EAD7;
-            color: #333;
-            border: 3px solid #333;
-            font-family: 'Baloo 2', cursive;
-            text-transform: uppercase;
-            padding: 10px 20px;
-            border-radius: 50px;
-            position: relative;
-            transition: all 0.2s ease;
-            font-weight: bold;
             overflow: hidden;
-            box-shadow: 0 6px 0 #91C5B6;
         }
         
-        .magic-btn:hover {
-            transform: translateY(2px);
-            box-shadow: 0 4px 0 #91C5B6;
-            background-color: #C7E7D9;
-        }
-        
-        .magic-btn:active {
-            transform: translateY(6px);
-            box-shadow: none;
-        }
-        
-        .magic-btn::before {
-            content: "✨";
-            position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        
-        .magic-btn::after {
-            content: "✨";
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        
-        .magic-input {
-            background-color: #FFDAC1;
-            color: #333;
-            border: 3px solid #FF9AA2;
-            border-radius: 15px;
-            font-family: 'Baloo 2', cursive;
-            resize: none;
-            padding: 15px;
-            font-size: 16px;
-        }
-        
-        .magic-input:focus {
-            outline: none;
-            box-shadow: 0 0 15px rgba(255, 154, 162, 0.5);
-            border-color: #FF9AA2;
-        }
-        
-        .wizard-output {
-            background-color: #E2F0CB;
-            border: 3px solid #AEC6CF;
-            color: #333;
-            font-family: 'Baloo 2', cursive;
-            white-space: pre-wrap;
-            min-height: 300px;
-            overflow-y: auto;
-            padding: 15px;
-            border-radius: 15px;
-            position: relative;
-        }
-        
-        .wizard-output::before {
-            content: "📝";
-            position: absolute;
-            top: -15px;
-            right: -10px;
-            font-size: 30px;
-            background: white;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #AEC6CF;
-        }
-        
-        .loading-bar-container {
-            height: 25px;
-            width: 100%;
-            background-color: #FCF7DE;
-            border-radius: 50px;
-            margin: 15px 0;
-            overflow: hidden;
-            position: relative;
-            border: 2px solid #FF9AA2;
-        }
-        
-        .loading-bar {
+        .limit-progress {
             height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #FF9AA2, #C7CEEA, #B5EAD7, #FFDAC1);
-            background-size: 300% 100%;
-            animation: gradient 3s ease infinite;
-            border-radius: 50px;
-            transition: width 0.5s ease;
+            background-color: #84f9ff;
+            border-radius: 4px;
+            transition: width 0.3s;
         }
         
-        @keyframes gradient {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+        .limit-progress.warning {
+            background-color: #f5dd90;
         }
         
-        .section-label {
-            color: #FF9AA2;
-            font-weight: bold;
-            font-size: 20px;
-            display: inline-block;
-            padding: 5px 15px;
-            background-color: #FCF7DE;
-            border-radius: 20px;
-            margin-bottom: 10px;
-            position: relative;
+        .limit-progress.error {
+            background-color: #ff6b6b;
         }
         
-        .section-label::before {
-            content: "💫";
-            margin-right: 8px;
-        }
-        
-        .wizard-output::-webkit-scrollbar {
-            width: 10px;
-        }
-        
-        .wizard-output::-webkit-scrollbar-track {
-            background: #E2F0CB;
-            border-radius: 10px;
-        }
-        
-        .wizard-output::-webkit-scrollbar-thumb {
-            background: #AEC6CF;
-            border-radius: 10px;
-        }
-        
-        .wizard-output::-webkit-scrollbar-thumb:hover {
-            background: #91A8B8;
-        }
-        
-        .wizard-footer {
-            font-size: 14px;
-            color: #AEC6CF;
-            text-align: center;
-            margin-top: 20px;
-            font-weight: bold;
-        }
-        
-        .floating {
-            animation: floating 3s ease-in-out infinite;
-        }
-        
-        @keyframes floating {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-        
-        .magic-dust {
-            pointer-events: none;
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: radial-gradient(ellipse at center, #FFC2D1 0%, transparent 70%);
-            border-radius: 50%;
-            opacity: 0;
-        }
-        
-        .download-btn {
-            background-color: #C7CEEA;
-            box-shadow: 0 6px 0 #9FA8C7;
-        }
-        
-        .download-btn:hover {
-            box-shadow: 0 4px 0 #9FA8C7;
-        }
-        
-        .download-badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background-color: #FF9AA2;
-            color: white;
-            width: 25px;
-            height: 25px;
-            border-radius: 50%;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            animation: bounce 1s infinite;
-        }
-        
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-        
-        /* Cute cloud shape at the top */
-        .cloud-shape {
-            position: absolute;
-            top: -40px;
-            left: 100px;
-            width: 120px;
-            height: 60px;
-            background-color: white;
-            border-radius: 50px;
-            z-index: -1;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .cloud-shape::before {
-            content: "";
-            position: absolute;
-            top: -25px;
-            left: 25px;
-            width: 60px;
-            height: 60px;
-            background-color: white;
-            border-radius: 50%;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .cloud-shape::after {
-            content: "";
-            position: absolute;
-            top: -15px;
-            left: 60px;
-            width: 40px;
-            height: 40px;
-            background-color: white;
-            border-radius: 50%;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }
+        /* All your remaining styles... */
     </style>
 </head>
 <body class="min-h-screen flex flex-col py-8">
-    <div class="container mx-auto px-4 flex-grow max-w-3xl relative">
-        <!-- Fun cloud shape decoration -->
-        <div class="cloud-shape"></div>
-        
-        <div class="wizard-container">
-            <div class="wizard-header">
-                <h1 class="wizard-title">IDEA <span class="floating">WIZARD</span></h1>
-                <p class="text-center mb-3 text-lg">Magically transform your ideas into amazing product specs! ✨</p>
-                <p class="text-center text-sm font-bold bg-FFDAC1 p-2 rounded-full inline-block mx-auto px-4" style="background-color: #FFDAC1;">Wizards on duty - no appointment needed!</p>
+    <div class="container mx-auto px-4 flex-grow max-w-3xl">
+        <div class="terminal-container">
+            <div class="terminal-header">
+                <h1 class="retro-title">SPEC<span class="blinker">_</span>BAR</h1>
+                <p class="text-center mb-3 typing-effect">ACCESS GRANTED: YOUR AI-POWERED PRODUCT SPEC GENERATOR v1.0</p>
+                <p class="text-center">[WARNING: UNAUTHORIZED ACCESS WILL BE PROSECUTED]</p>
             </div>
             
-            <p class="mb-4 section-label">Share your magical idea:</p>
+            <p class="mb-4 section-label">DESCRIBE YOUR RADICAL PRODUCT IDEA BELOW:</p>
             
             <textarea 
                 id="userInput" 
-                class="w-full h-40 p-4 magic-input mb-4"
-                placeholder="Tell me about your amazing product idea... The more details, the more magical your spec will be!"
+                class="w-full h-40 p-4 retro-input mb-1"
+                placeholder=">> POP IT HERE, DUDE! <<"
+                maxlength="245"
+                onkeyup="updateCharCounter()"
+                onpaste="setTimeout(updateCharCounter, 0)"
             ></textarea>
             
-            <div class="flex justify-center space-x-6 mb-6">
+            <!-- Character counter -->
+            <div class="char-counter" id="charCounter">0 / 245 CHARACTERS</div>
+            
+            <!-- Limit progress bar -->
+            <div class="limit-bar">
+                <div class="limit-progress" id="limitProgressBar" style="width: 0%"></div>
+            </div>
+            
+            <div class="flex justify-center space-x-6 my-6">
                 <button 
                     id="generateBtn"
                     onclick="generateSpec()"
-                    class="magic-btn px-8"
+                    class="retro-btn"
                 >
-                    Cast Spell
+                    >> GENERATE SPEC <<
                 </button>
                 <button 
                     id="downloadButton"
                     onclick="downloadSpec()"
-                    class="magic-btn download-btn hidden relative px-8"
+                    class="retro-btn hidden"
                 >
-                    Save Magic
-                    <span class="download-badge">!</span>
+                    >> DOWNLOAD.DOC <<
                 </button>
             </div>
 
+            <!-- Process Visualizer - Shows detailed background process -->
+            <div id="processVisualizer" class="process-visualizer hidden">
+                <h3 class="text-center mb-3 neon-text">[ SPEC GENERATION IN PROGRESS ]</h3>
+                
+                <!-- All your process step divs... -->
+                
+                <div class="mt-4">
+                    <div class="loading-bar" id="overallProgressBar"></div>
+                    <p class="text-center mt-2" id="overallProgressText">OVERALL PROGRESS: 0%</p>
+                </div>
+            </div>
+
+            <!-- Simple loading display (will be replaced by process visualizer) -->
             <div id="loadingContainer" class="hidden">
-                <p class="text-center mb-2 font-bold text-lg" id="loadingMessage">Brewing magical spec... 🧙‍♂️</p>
-                <div class="loading-bar-container">
-                    <div class="loading-bar" id="loadingBar"></div>
+                <p class="text-center mb-2 neon-text" id="loadingMessage">COMPUTING...</p>
+                <div class="loading-bar" id="loadingBar"></div>
+                <div id="quipContainer" class="text-center mt-4">
+                    <div class="quip-bubble inline-block">
+                        <span id="quipText">I'm the product spec this company deserves, but not the one it needs right now...</span>
+                    </div>
                 </div>
             </div>
 
             <div class="mt-6">
-                <p class="mb-2 section-label">Your magical spec:</p>
+                <p class="mb-2 section-label">OUTPUT:</p>
                 <div 
                     id="output" 
-                    class="wizard-output"
-                >✨ Your magical product spec will appear here... ✨</div>
+                    class="terminal-output"
+                >-- WAITING FOR INPUT --</div>
             </div>
             
-            <div class="wizard-footer">
-                Made with 💖 by the Idea Wizard Collective • Spreading Joy Since 2025
+            <div class="retro-footer">
+                © 1985 SAM SITARAM • UNAUTHORIZED DUPLICATION VIOLATES GALACTIC LAW
             </div>
         </div>
     </div>
 
     <script>
-        // Sample product spec templates for instant responses
-        const specTemplates = [
-            `# ✨ MAGICAL PRODUCT SPEC: {PRODUCT_NAME} ✨
-
-## 🌟 THE BIG IDEA
-{PRODUCT_DESCRIPTION}
-
-## 🎯 WHO'S GOING TO LOVE THIS
-- ✅ {PERSONA_1} who want to save time and have more fun
-- ✅ {PERSONA_2} looking for creative solutions
-- ✅ Anyone who's ever said "I wish there was an easier way!"
-
-## 💎 MAGICAL FEATURES
-1. 🚀 Super simple setup (under 2 minutes!)
-2. 🧠 Smart recommendations that learn from you
-3. 🌈 Colorful, fun interface that makes work feel like play
-4. 🔄 Seamless integration with your favorite tools
-
-## 🛠️ HOW WE'LL BUILD IT
-- 🎨 Design: Playful yet intuitive interface
-- 🔧 Tech: Reliable, speedy backend
-- 🧪 Testing: With real people who'll actually use it
-- 🚀 Launch: With a splash of excitement!
-
-## ⏱️ WHEN WILL IT BE READY?
-- 🌱 First version: 6 weeks
-- 🌿 Beta testing: 2 weeks
-- 🌳 Full launch: 2 months from today
-
-## 💰 WHY IT'LL BE SUCCESSFUL
-- 😍 Solves a real problem people care about
-- 🤩 More delightful than anything else out there
-- 💸 Clear path to growing our magical community`,
-
-            `# ✨ ENCHANTED PRODUCT SPEC: {PRODUCT_NAME} ✨
-
-## 💫 VISION STATEMENT
-To create a {CATEGORY} that brings joy and simplicity to everyday tasks through magical innovation and thoughtful design.
-
-## 🧙‍♂️ THE SPELL WE'RE CASTING
-{PRODUCT_DESCRIPTION}
-
-## ✨ ENCHANTED FEATURES
-1. 🪄 One-tap wonder: Accomplish {PRIMARY_FUNCTION} in seconds
-2. 🔮 Crystal ball insights: Predictive analysis of what you'll need next
-3. 🌈 Rainbow interface: Color-coded for intuitive navigation
-4. 🧚 Fairy helpers: Friendly guidance throughout the experience
-
-## 👥 WHO WE'RE ENCHANTING
-- 🦄 Dreamers: Creative folks who love innovation
-- 🦉 Wisdoms: Practical people who value efficiency
-- 🦊 Tricksters: Those who appreciate clever shortcuts
-
-## 🏆 MAGICAL ADVANTAGES
-- ⚡ Lightning-fast performance (3x faster than competitors)
-- 🌟 Sparkling clean design that anyone can understand
-- 🎭 Personality and charm unlike any other product
-
-## 🧪 POTION INGREDIENTS (TECH STACK)
-- 📱 Frontend: React Native for cross-platform enchantment
-- 🧠 Backend: Node.js with Express for speedy spells
-- 💾 Database: MongoDB for flexible spell storage
-- 🔒 Security: Advanced protection spells to keep data safe
-
-## 🗓️ SPELL COMPLETION TIMELINE
-- 🌑 New Moon (Month 1): Core features developed
-- 🌓 Half Moon (Month 2): Testing and refinement
-- 🌕 Full Moon (Month 3): Grand unveiling to the world`,
-
-            `# ✨ FUN-TASTIC PRODUCT SPEC: {PRODUCT_NAME} ✨
-
-## 🎉 THE AWESOME IDEA
-{PRODUCT_DESCRIPTION}
-
-## 🎯 WHY PEOPLE WILL DO A HAPPY DANCE
-This solves the age-old problem of {PROBLEM} in a way that's actually enjoyable! No more grumbling, just smiles.
-
-## 👀 WHAT IT LOOKS LIKE
-Imagine a {CATEGORY} that feels like playing your favorite game, but actually helps you get stuff done. That's us!
-
-## ✅ COOL STUFF IT DOES
-1. 🚀 {PRIMARY_FUNCTION} - but 5x faster and 10x more fun
-2. 🎨 Customizable everything - make it yours!
-3. 🏆 Built-in rewards that actually motivate you
-4. 👯 Friend features that make collaboration a party
-5. 🔍 Smart suggestions that seem like mind-reading
-
-## 👋 SAY HELLO TO YOUR NEW USERS
-- 😎 Cool Kids: Early adopters who love new toys
-- 👩‍💼 Busy Bees: Professionals who need efficiency with personality
-- 🧠 Clever Cats: People who appreciate well-designed solutions
-
-## 💰 BUSINESS MAGIC
-- 🆓 Free tier that hooks people immediately
-- 💎 Premium features worth every penny
-- 🚀 Growth plan that spreads through happiness
-
-## ⏰ WHEN CAN WE PLAY?
-- 🎮 Alpha: Next month (friends & family)
-- 🎯 Beta: In 2 months (for our waitlist VIPs)
-- 🎪 Launch Party: 3 months from now (everyone's invited!)
-
-## 🌈 SUCCESS LOOKS LIKE
-- 😁 Happy users telling friends
-- 📈 Growing community of enthusiasts
-- 💌 Love letters from people whose lives we've made better`
-        ];
-
-        // Fun user personas
-        const personas = [
-            "Busy parents", 
-            "Creative freelancers", 
-            "Adventure seekers", 
-            "Tech enthusiasts",
-            "Small business owners", 
-            "Students", 
-            "Remote workers", 
-            "Fitness lovers",
-            "Travel enthusiasts", 
-            "Food connoisseurs", 
-            "Eco-conscious shoppers", 
-            "Digital nomads"
+        const API_BASE_URL = window.location.origin + "/api";
+        const CHARACTER_LIMIT = 245;
+        const loadingMessages = [
+            "BREWING PRODUCT MAGIC...",
+            "DISTILLING PRODUCT WISDOM...",
+            "ENGINEERING BREAKTHROUGH INSIGHTS...",
+            "TRANSFORMING IDEAS INTO STRATEGY...",
+            "UNLEASHING INNER PRODUCT GENIUS...",
+            "HACKING THE MAINFRAME...",
+            "BYPASSING CORPORATE FIREWALLS...",
+            "CALCULATING SYNERGY METRICS...",
+            "REBOOTING INNOVATION MATRIX...",
+            "DEFRAGMENTING IDEA DRIVE..."
         ];
         
-        // Common problems people face
-        const problems = [
-            "never having enough time", 
-            "forgetting important things", 
-            "complicated processes", 
-            "information overload",
-            "staying organized", 
-            "connecting with others", 
-            "finding motivation", 
-            "making decisions",
-            "tracking progress", 
-            "learning new skills", 
-            "maintaining good habits", 
-            "finding the right resources"
+        // Character counter update function
+        function updateCharCounter() {
+            const input = document.getElementById('userInput');
+            const counter = document.getElementById('charCounter');
+            const progressBar = document.getElementById('limitProgressBar');
+            const currentLength = input.value.length;
+            const percentage = (currentLength / CHARACTER_LIMIT) * 100;
+            
+            // Update counter text
+            counter.textContent = `${currentLength} / ${CHARACTER_LIMIT} CHARACTERS`;
+            
+            // Update progress bar
+            progressBar.style.width = `${percentage}%`;
+            
+            // Style based on usage
+            if (currentLength >= CHARACTER_LIMIT) {
+                counter.className = 'char-counter counter-error';
+                progressBar.className = 'limit-progress error';
+                playWarningBeep();
+            } else if (currentLength >= CHARACTER_LIMIT * 0.8) {
+                counter.className = 'char-counter counter-warning';
+                progressBar.className = 'limit-progress warning';
+            } else {
+                counter.className = 'char-counter';
+                progressBar.className = 'limit-progress';
+            }
+        }
+        
+        // Play a warning beep when limit is reached
+        function playWarningBeep() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.type = 'sawtooth';
+            oscillator.frequency.value = a400;
+            gainNode.gain.value = 0.05;
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.start();
+            setTimeout(() => {
+                oscillator.stop();
+            }, 100);
+        }
+        
+        // Collection of quippy one-liners categorized by character style
+        const quips = [
+            // Batman-style
+            "I'm the product spec this company deserves, but not the one it needs right now...",
+            "It's not who you are underneath, it's what your product spec that defines you.",
+            "Why do we fall? So we can learn to pick our products up.",
+            "Some men just want to watch their products burn.",
+            
+            // Frasier Crane-style
+            "I'm listening to your product requirements... and I'm already overwhelmed.",
+            "This spec isn't just good, it's sherry-sipping, opera-listening good.",
+            "I may have a degree from Harvard, but even I can't make sense of this product idea.",
+            "What you're asking for is the product equivalent of a perfect soufflé - difficult but not impossible.",
+            
+            // Jerry Seinfeld-style
+            "What's the deal with product specs? They're not products, and they're not spectacles.",
+            "Have you ever noticed how everyone wants a perfect product but nobody wants to read the spec?",
+            "Your product is like an airport: lots of features coming and going but nobody wants to stay there.",
+            "If your product were a soup, this spec would be the 'No soup for you!' guy.",
+            
+            // George Costanza-style
+            "This spec is doing the opposite of what you'd expect. That's the George Costanza way!",
+            "You know, I always wanted to pretend to be a product manager.",
+            "It's not a lie if YOU believe your product will actually work like this.",
+            "My product philosophy? Every decision I've ever made has been wrong. So I'm doing the opposite!"
         ];
 
-        // Function to generate a fun product name
-        function generateProductName() {
-            const prefixes = ["Wonder", "Joy", "Spark", "Bubble", "Zesty", "Peppy", "Sunny", "Zippy", "Bounce", "Twinkling"];
-            const suffixes = ["Buddy", "Pal", "Joy", "Magic", "Spark", "Beam", "Pop", "Zoom", "Blast", "Dash"];
-            return prefixes[Math.floor(Math.random() * prefixes.length)] + " " + suffixes[Math.floor(Math.random() * suffixes.length)];
-        }
+        // Competitor research feed content
+        const competitorResearchFeed = [
+            "Scanning market landscape...",
+            "Analyzing competitor positioning strategies...",
+            "Examining pricing models across industry...",
+            "Identifying competitive advantages...",
+            "Evaluating UX differentiation...",
+            "Assessing technical approaches...",
+            "Comparing feature sets...",
+            "Analyzing target demographics overlap...",
+            "Reviewing competitor funding rounds...",
+            "Examining market share distribution...",
+            "Identifying emerging players...",
+            "Evaluating competitor roadmaps...",
+            "Finding white space opportunities...",
+            "Calculating competitive response time..."
+        ];
 
-        // Function to choose a random category
-        function generateCategory() {
-            const categories = ["app that feels like a game", "tool that brightens your day", "platform full of surprises", "helper that knows just what you need", "solution wrapped in fun", "experience that makes you smile", "product that feels like magic", "assistant with personality", "service with sprinkles on top", "digital buddy"];
-            return categories[Math.floor(Math.random() * categories.length)];
-        }
+        // Sections corresponding to the process steps
+        const sections = [
+            "problem", "personas", "competitors", "requirements", 
+            "metrics", "risks", "gtm", "technical", 
+            "investment", "comms"
+        ];
 
-        // Create magic dust particles
-        function createMagicDust(x, y) {
-            const dust = document.createElement('div');
-            dust.className = 'magic-dust';
-            dust.style.left = `${x}px`;
-            dust.style.top = `${y}px`;
-            document.body.appendChild(dust);
-            
-            // Animate the particle
-            const angle = Math.random() * Math.PI * 2;
-            const velocity = 1 + Math.random() * 3;
-            const size = 5 + Math.random() * 10;
-            const lifetime = 1000 + Math.random() * 2000; // ms
-            
-            dust.style.width = `${size}px`;
-            dust.style.height = `${size}px`;
-            
-            let startTime = Date.now();
-            
-            function animateDust() {
-                const elapsed = Date.now() - startTime;
-                const progress = elapsed / lifetime;
-                
-                if (progress < 1) {
-                    // Move the particle
-                    const currentX = parseFloat(dust.style.left) + Math.cos(angle) * velocity;
-                    const currentY = parseFloat(dust.style.top) + Math.sin(angle) * velocity - (progress * 20); // Add a bit of upward movement
-                    
-                    dust.style.left = `${currentX}px`;
-                    dust.style.top = `${currentY}px`;
-                    
-                    // Fade in and out
-                    dust.style.opacity = progress < 0.5 ? progress * 2 : 2 - (progress * 2);
-                    
-                    requestAnimationFrame(animateDust);
-                } else {
-                    // Remove when animation is done
-                    document.body.removeChild(dust);
-                }
-            }
-            
-            requestAnimationFrame(animateDust);
-        }
-
-        // Add click effect to buttons
-        document.querySelectorAll('.magic-btn').forEach(button => {
-            button.addEventListener('click', function(e) {
-                // Create multiple particles at the click point
-                for (let i = 0; i < 20; i++) {
-                    createMagicDust(e.pageX, e.pageY);
-                }
-            });
-        });
-
-        // Main function to generate a product spec
-        function generateSpec() {
+        // All your existing functions...
+        
+        async function generateSpec() {
             const input = document.getElementById('userInput').value;
             const generateBtn = document.getElementById('generateBtn');
-            const loadingContainer = document.getElementById('loadingContainer');
             const outputDiv = document.getElementById('output');
             const downloadButton = document.getElementById('downloadButton');
-            const loadingBar = document.getElementById('loadingBar');
 
-            if (input.trim().length < 10) {
-                outputDiv.innerHTML = '❌ Oops! The magic words are too few! Please share more about your idea for the spell to work properly! ❌';
-                // Create sad particles
-                for (let i = 0; i < 5; i++) {
-                    const rect = outputDiv.getBoundingClientRect();
-                    createMagicDust(rect.left + rect.width/2, rect.top + rect.height/2);
-                }
+            if (input.trim().length < 20) {
+                outputDiv.innerHTML = 'ERROR: INSUFFICIENT DATA. PLEASE PROVIDE MORE DETAILED PRODUCT DESCRIPTION!';
+                return;
+            }
+            
+            // Check character limit
+            if (input.length > CHARACTER_LIMIT) {
+                outputDiv.innerHTML = `ERROR: INPUT EXCEEDS ${CHARACTER_LIMIT} CHARACTER LIMIT. PLEASE TRIM YOUR DESCRIPTION!`;
                 return;
             }
 
-            // Quick UI update to show we're doing something
             generateBtn.disabled = true;
-            loadingContainer.classList.remove('hidden');
+            generateBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            // Show the process visualizer
+            simulateBackgroundProcess();
+            
             outputDiv.innerHTML = '';
             downloadButton.classList.add('hidden');
-            loadingBar.style.width = '0%';
             
-            // Simulate fast loading
-            let loadingInterval;
-            
-            // Complete quickly - only 500ms total loading time
-            loadingInterval = setInterval(() => {
-                loadingBar.style.width = '100%';
-                clearInterval(loadingInterval);
-                
-                // Generate the spec instantly
-                const selectedTemplate = specTemplates[Math.floor(Math.random() * specTemplates.length)];
-                const productName = generateProductName();
-                const category = generateCategory();
-                const persona1 = personas[Math.floor(Math.random() * personas.length)];
-                const persona2 = personas[Math.floor(Math.random() * personas.length)];
-                const problem = problems[Math.floor(Math.random() * problems.length)];
-                
-                // Create the final spec with the user's input and our random elements
-                let finalSpec = selectedTemplate
-                    .replace("{PRODUCT_NAME}", productName)
-                    .replace("{PRODUCT_DESCRIPTION}", input)
-                    .replace("{CATEGORY}", category)
-                    .replace("{PRIMARY_FUNCTION}", input.split(' ').slice(0, 3).join(' '))
-                    .replace("{PERSONA_1}", persona1)
-                    .replace("{PERSONA_2}", persona2)
-                    .replace("{PROBLEM}", problem);
-                
-                // Show the result immediately
-                outputDiv.innerHTML = finalSpec;
-                downloadButton.classList.remove('hidden');
-                loadingContainer.classList.add('hidden');
-                generateBtn.disabled = false;
-                
-                // Create magic particles around the output
-                const rect = outputDiv.getBoundingClientRect();
-                for (let i = 0; i < 30; i++) {
-                    createMagicDust(
-                        rect.left + Math.random() * rect.width, 
-                        rect.top + Math.random() * rect.height
-                    );
-                }
-            }, 500);
-        }
+            try {
+                const response = await fetch(`${API_BASE_URL}/generate-spec`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input })
+                });
 
-        // Fun download function
-        function downloadSpec() {
-            const spec = document.getElementById('output').innerText;
-            const productName = spec.split('\n')[0].split(':')[1].trim().replace('✨', '').trim();
-            
-            // Create fancy magic effect
-            const outputRect = document.getElementById('output').getBoundingClientRect();
-            for (let i = 0; i < 50; i++) {
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Server error');
+                }
+
+                const result = await response.json();
+                
+                // Once request is complete, ensure all progress bars are at 100%
+                sections.forEach(section => {
+                    const step = document.getElementById(`step-${section}`);
+                    step.className = 'process-step completed';
+                    document.getElementById(`progress-${section}`).textContent = '100%';
+                });
+                
+                updateOverallProgress(100);
+
+                // Hide process visualizer with a small delay for effect
                 setTimeout(() => {
-                    createMagicDust(
-                        outputRect.left + Math.random() * outputRect.width,
-                        outputRect.top + Math.random() * outputRect.height
-                    );
-                }, i * 50);
+                    document.getElementById('processVisualizer').classList.add('hidden');
+                    
+                    if (result.spec) {
+                        typeWriter(result.spec, 'output', 10);
+                        downloadButton.classList.remove('hidden');
+                    } else {
+                        outputDiv.innerHTML = 'ERROR 404: SPEC GENERATION FAILED. SYSTEM MALFUNCTION!';
+                    }
+                }, 1000);
+            } catch (error) {
+                console.error('Spec Generation Error:', error);
+                if (error.message.includes('character limit')) {
+                    outputDiv.innerHTML = `FATAL ERROR: CHARACTER LIMIT EXCEEDED!`;
+                } else if (error.message.includes('429')) {
+                    outputDiv.innerHTML = `RATE LIMIT EXCEEDED! SYSTEM COOLING DOWN... PLEASE TRY AGAIN IN 60 SECONDS.`;
+                } else {
+                    outputDiv.innerHTML = `FATAL ERROR: ${error.message}. PLEASE REBOOT SYSTEM!`;
+                }
+                
+                // Mark all sections as failed
+                sections.forEach(section => {
+                    const progressEl = document.getElementById(`progress-${section}`);
+                    if (progressEl.textContent !== '100%') {
+                        document.getElementById(`step-${section}`).classList.add('error');
+                        progressEl.textContent = 'FAILED';
+                        progressEl.style.color = '#ff6b6b';
+                    }
+                });
+                
+                document.getElementById('overallProgressBar').style.backgroundColor = '#ff6b6b';
+                document.getElementById('overallProgressText').textContent = 'PROCESS TERMINATED';
+            } finally {
+                setTimeout(() => {
+                    generateBtn.disabled = false;
+                    generateBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    
+                    // Make sure we always hide the process visualizer after we're done
+                    setTimeout(() => {
+                        document.getElementById('processVisualizer').classList.add('hidden');
+                    }, 2000);
+                }, 500);
             }
-            
-            // Create a blob from the text
-            const blob = new Blob([spec], {type: 'text/plain'});
-            
-            // Create download link
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `${productName}_Magic_Spec.txt`;
-            
-            // Trigger download
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            
-            // Show confirmation directly in the UI
-            const originalText = document.getElementById('output').innerHTML;
-            document.getElementById('output').innerHTML = '<div class="text-center py-10"><span style="font-size: 48px;">🎉</span><br><span style="font-size: 24px; font-weight: bold;">Magic captured successfully!</span><br>Your spell has been bottled up and saved!</div>';
-            
-            // Reset after a short time
-            setTimeout(() => {
-                document.getElementById('output').innerHTML = originalText;
-            }, 1500);
         }
         
-        // Fun secret code (replaces Konami code)
-        let secretCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
-        let secretPosition = 0;
-        
-        document.addEventListener('keydown', function(e) {
-            if (e.key === secretCode[secretPosition]) {
-                secretPosition++;
-                if (secretPosition === secretCode.length) {
-                    // Create rainbow effect
-                    document.body.style.transition = "background 1s";
-                    document.body.style.background = "linear-gradient(45deg, #ff9aa2, #ffb7b2, #ffdac1, #e2f0cb, #b5ead7, #c7ceea)";
-                    document.body.style.backgroundSize = "600% 600%";
-                    document.body.style.animation = "rainbow 5s ease infinite";
-                    
-                    // Add the animation
-                    const style = document.createElement('style');
-                    style.innerHTML = `
-                        @keyframes rainbow {
-                            0% { background-position: 0% 50%; }
-                            50% { background-position: 100% 50%; }
-                            100% { background-position: 0% 50%; }
-                        }
-                    `;
-                    document.head.appendChild(style);
-                    
-                    // Add unicorn somewhere
-                    const unicorn = document.createElement('div');
-                    unicorn.textContent = '🦄';
-                    unicorn.style.position = 'fixed';
-                    unicorn.style.bottom = '20px';
-                    unicorn.style.right = '20px';
-                    unicorn.style.fontSize = '50px';
-                    unicorn.style.animation = 'floating 2s infinite';
-                    document.body.appendChild(unicorn);
-                    
-                    // Show fun message
-                    alert('✨ SUPER RAINBOW UNICORN MODE ACTIVATED! ✨');
-                    
-                    // Reset for another try
-                    secretPosition = 0;
-                }
-            } else {
-                secretPosition = 0;
-            }
+        // Add this line to initialize the character counter on page load
+        window.addEventListener('load', function() {
+            updateCharCounter();
         });
+        
+        // Rest of your script remains the same...
     </script>
 </body>
 </html>
