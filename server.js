@@ -7,6 +7,8 @@ const cheerio = require('cheerio');
 const officegen = require('officegen');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
+// Character limit for product idea input
+const CHARACTER_LIMIT = 245;
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -325,7 +327,7 @@ ${competitorResearch}
 ${communicationArtifacts}
         `;
 
-        res.json({ 
+        res.json({  
             spec: completeSpec,
             competitorResearch: competitorResearch,
             communicationArtifacts,
